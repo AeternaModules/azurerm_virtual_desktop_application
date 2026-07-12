@@ -1,3 +1,7 @@
+output "virtual_desktop_applications_id" {
+  description = "Map of id values across all virtual_desktop_applications, keyed the same as var.virtual_desktop_applications"
+  value       = { for k, v in azurerm_virtual_desktop_application.virtual_desktop_applications : k => v.id }
+}
 output "virtual_desktop_applications_application_group_id" {
   description = "Map of application_group_id values across all virtual_desktop_applications, keyed the same as var.virtual_desktop_applications"
   value       = { for k, v in azurerm_virtual_desktop_application.virtual_desktop_applications : k => v.application_group_id }
