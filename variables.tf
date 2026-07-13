@@ -27,23 +27,30 @@ EOT
     icon_path                    = optional(string)
     show_in_portal               = optional(bool)
   }))
-  # --- Unconfirmed validation candidates, derived from azurerm_virtual_desktop_application's provider source ---
-  # Not auto-enabled: either a bespoke provider validator we can't safely translate,
-  # or a path that crosses a list-typed block (needs its own for_each wrapping).
-  # Review, translate into a real validation{} block above, and delete once confirmed.
-  # path: name
-  #   source:    validation.All(...) - no translation rule yet, add one
-  # path: application_group_id
-  #   source:    [from applicationgroup.ValidateApplicationGroupID] !ok
-  # path: application_group_id
-  #   source:    [from applicationgroup.ValidateApplicationGroupID] err != nil
-  # path: friendly_name
-  #   condition: length(value) >= 1 && length(value) <= 64
-  #   message:   must be between 1 and 64 characters
-  # path: description
-  #   condition: length(value) >= 1 && length(value) <= 512
-  #   message:   must be between 1 and 512 characters
-  # path: command_line_argument_policy
-  #   source:    validation.StringInSlice value list is not a literal []string - likely a generated PossibleValuesFor*() helper; resolve separately
+  validation {
+    condition = alltrue([
+      for k, v in var.virtual_desktop_applications : (
+        (length(v.name) > 0) && (can(regex("^[-a-zA-Z0-9]{1,260}$", v.name)))
+      )
+    ])
+    error_message = "all of: must not be empty; Virtual desktop application name must be 1 - 260 characters long, contain only letters, numbers and hyphens."
+  }
+  validation {
+    condition = alltrue([
+      for k, v in var.virtual_desktop_applications : (
+        v.friendly_name == null || (length(v.friendly_name) >= 1 && length(v.friendly_name) <= 64)
+      )
+    ])
+    error_message = "must be between 1 and 64 characters"
+  }
+  validation {
+    condition = alltrue([
+      for k, v in var.virtual_desktop_applications : (
+        v.description == null || (length(v.description) >= 1 && length(v.description) <= 512)
+      )
+    ])
+    error_message = "must be between 1 and 512 characters"
+  }
+  # Note: 3 additional provider-side validators are enforced at apply time but not mirrored as validation{} blocks here (bespoke or non-mechanically-translatable).
 }
 
